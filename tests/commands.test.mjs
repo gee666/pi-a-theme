@@ -26,7 +26,7 @@ function setup(t) {
     },
   };
   const adapter = {
-    defaultColor: () => '#444444',
+    terminalColor: () => '#444444',
     previewTheme: settings => ({ name: 'preview', settings }),
     openPicker: async () => undefined,
   };
@@ -39,10 +39,11 @@ function setup(t) {
   };
 }
 
-test('only the combined command is registered; discovery uses terminal-derived defaults', t => {
+test('only the combined command is registered; discovery uses the chosen defaults', t => {
   const s = setup(t);
   assert.deepEqual([...s.commands.keys()], ['a-theme-colors']);
-  assert.deepEqual(s.theme(), deriveTheme('#444444'));
+  assert.deepEqual(readSettings(s.dir), { color: '#CD9D8A', accent: '#CC397B' });
+  assert.deepEqual(s.theme(), deriveTheme('#CD9D8A', '#CC397B'));
   assert.deepEqual(s.events.get('resources_discover')(), { themePaths: [paths(s.dir).theme] });
   assert.deepEqual(s.themes, []);
   assert.equal(existsSync(paths(s.dir).config), false);
@@ -52,12 +53,12 @@ test('live previews do not save; Apply persists both colors and reloads once', a
   const s = setup(t);
   const selected = { color: '#EB7168', accent: '#CC457D' };
   s.adapter.openPicker = async (ctx, initial, preview, terminalColor) => {
-    assert.deepEqual(initial, { color: '#444444' });
+    assert.deepEqual(initial, { color: '#CD9D8A', accent: '#CC397B' });
     assert.equal(terminalColor, '#444444');
     preview({ color: '#225588' });
     preview(selected);
     assert.equal(existsSync(paths(s.dir).config), false);
-    assert.deepEqual(s.theme(), deriveTheme('#444444'));
+    assert.deepEqual(s.theme(), deriveTheme('#CD9D8A', '#CC397B'));
     return selected;
   };
   await s.run();
@@ -142,10 +143,10 @@ test('malformed settings are reported without overwriting them', async t => {
   assert.equal(readFileSync(paths(s.dir).config, 'utf8'), '{broken');
 });
 
-test('saved colors override changed terminal defaults', t => {
+test('saved colors override the package defaults', t => {
   const s = setup(t);
   saveSettings(s.dir, { color: '#EB7168', accent: '#CC457D' });
-  generateTheme(s.dir, '#888888');
+  generateTheme(s.dir);
   assert.deepEqual(s.theme(), deriveTheme('#EB7168', '#CC457D'));
 });
 

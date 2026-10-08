@@ -5,7 +5,7 @@ import { makeTheme, terminalBase } from "../src/pi-theme.ts";
 
 export default function (pi: ExtensionAPI) {
   registerTheme(pi, getAgentDir(), {
-    defaultColor: terminalBase,
+    terminalColor: terminalBase,
     previewTheme: (settings: ColorSettings, ctx: ExtensionCommandContext) =>
       makeTheme(settings, ctx.ui.theme.getColorMode()),
     openPicker: (ctx: ExtensionCommandContext, initial: ColorSettings,

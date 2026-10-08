@@ -2,7 +2,9 @@
 
 A Pi theme derived from a base color and an optional accent, using the color relationships in [Blooming Ilacs](https://github.com/gee666/pi-theme-blooming-ilacs).
 
-By default, the base is the terminal's reported background mixed with 18% white. Saved choices take priority. If the terminal does not report its background, Pi's dark-background fallback produces a `#2E2E2E` seed.
+The default base is `#CD9D8A`, with accent `#CC397B`. Saved choices take priority.
+
+The Terminal button offers the terminal's reported background mixed with 18% white. If the terminal does not report its background, Pi's dark-background fallback produces a `#2E2E2E` seed.
 
 The terminal background stays unchanged. Only Pi's text, borders and message/tool blocks receive colors. This package never sets or resets terminal background, foreground or cursor colors.
 
