@@ -82,7 +82,7 @@ test('Cancel restores the exact previous theme and never persists a preview', as
   await s.run();
   assert.equal(s.themes.at(-1), s.original);
   assert.deepEqual(readSettings(s.dir), { color: '#EB7168', accent: '#CC457D' });
-  assert.equal(s.reloads(), 1);
+  assert.equal(s.reloads(), 0);
 });
 
 test('Cancel does not retain Pi\'s live theme proxy as the rollback target', async t => {
@@ -102,8 +102,48 @@ test('Cancel does not retain Pi\'s live theme proxy as the rollback target', asy
   };
   await s.run();
   assert.equal(active, s.original);
-  assert.equal(s.reloads(), 1);
+  assert.equal(s.reloads(), 0);
   assert.deepEqual(s.notices, []);
+});
+
+test('unchanged Apply restores the theme without writing or reloading', async t => {
+  const s = setup(t);
+  s.original.name = 'a-theme';
+  s.adapter.openPicker = async (_ctx, initial, preview) => {
+    preview({ color: '#123456' });
+    preview(initial);
+    return initial;
+  };
+  await s.run();
+  assert.equal(s.themes.at(-1), s.original);
+  assert.equal(existsSync(paths(s.dir).config), false);
+  assert.equal(s.reloads(), 0);
+});
+
+test('unchanged saved colors do not rewrite settings or reload', async t => {
+  const s = setup(t);
+  s.original.name = 'a-theme';
+  saveSettings(s.dir, { color: '#CD9D8A', accent: '#CC397B' });
+  const before = readFileSync(paths(s.dir).config, 'utf8');
+  s.adapter.openPicker = async (_ctx, initial, preview) => {
+    preview(initial);
+    return initial;
+  };
+  await s.run();
+  assert.equal(readFileSync(paths(s.dir).config, 'utf8'), before);
+  assert.equal(s.themes.at(-1), s.original);
+  assert.equal(s.reloads(), 0);
+});
+
+test('Apply switching from another theme counts as a change', async t => {
+  const s = setup(t);
+  s.adapter.openPicker = async (_ctx, initial, preview) => {
+    preview(initial);
+    return initial;
+  };
+  await s.run();
+  assert.equal(s.themes.at(-1), 'a-theme');
+  assert.equal(s.reloads(), 1);
 });
 
 test('Apply auto accent removes a previously saved accent', async t => {
@@ -124,7 +164,7 @@ test('preview errors restore the original theme without saving', async t => {
   assert.equal(s.themes.at(-1), s.original);
   assert.equal(existsSync(paths(s.dir).config), false);
   assert.equal(s.notices[0][0], 'Preview failed');
-  assert.equal(s.reloads(), 1);
+  assert.equal(s.reloads(), 0);
 });
 
 test('non-interactive modes do not open a picker or change settings', async t => {

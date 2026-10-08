@@ -44,8 +44,8 @@ Run `/a-theme-colors` to open the overlay.
 - Leave Accent blank or use Auto accent to derive it from the base.
 - Terminal uses a lighter version of this terminal's background as the base, keeping the accent choice.
 - Reset restores the values from when you opened the overlay.
-- Apply saves both colors together, selects a-theme and reloads Pi.
-- Cancel or Escape restores the previous theme without saving.
+- Apply saves both colors together, selects a-theme and reloads Pi only if the colors or active theme changed.
+- Cancel or Escape restores the previous theme without saving or reloading. Applying unchanged colors while a-theme is active does not reload either.
 
 Tab and Shift+Tab move between controls. Enter activates a button. Ctrl+Enter applies from anywhere. Invalid or incomplete hex values keep the last valid preview and block Apply.
 

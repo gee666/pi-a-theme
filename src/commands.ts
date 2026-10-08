@@ -29,8 +29,10 @@ export function registerTheme(pi, agentDir, { terminalColor: getTerminalColor, p
           if (!result.success) throw new Error(result.error ?? 'Could not preview theme');
           previewed = true;
         }, terminalColor);
-        if (selected) {
-          // Both values are saved together, only after Apply.
+        const colorsChanged = selected &&
+          (selected.color !== initial.color || selected.accent !== initial.accent);
+        if (selected && (colorsChanged || original.name !== 'a-theme')) {
+          // Both values are saved together, only after a changed Apply.
           saveSettings(agentDir, selected);
           generateTheme(agentDir, terminalColor);
           const result = ctx.ui.setTheme('a-theme');
@@ -43,12 +45,11 @@ export function registerTheme(pi, agentDir, { terminalColor: getTerminalColor, p
         ctx.ui.notify(error instanceof Error ? error.message : String(error), 'error');
       } finally {
         // Preview Theme objects never change Pi's saved theme selection.
-        if (original && !applied) ctx.ui.setTheme(original);
+        if (original && previewed && !applied) ctx.ui.setTheme(original);
       }
-      // After cancellation, reload also restores watchers and automatic-theme
-      // mode disabled by in-memory previews, without changing saved settings.
+      // Cancel and unchanged Apply only restore the preview, without reloading.
       // Reload replaces the extension runtime; do not use ctx after this.
-      if (applied || previewed) await ctx.reload();
+      if (applied) await ctx.reload();
     },
   });
 }
