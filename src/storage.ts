@@ -1,7 +1,7 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync, renameSync, rmSync } from 'node:fs';
 import { randomUUID } from 'node:crypto';
 import { join, dirname } from 'node:path';
-import { DEFAULT_COLOR, deriveTheme, normalizeColor } from './palette.mjs';
+import { DEFAULT_COLOR, deriveTheme, normalizeColor } from './palette.ts';
 
 export function paths(agentDir) {
   return {

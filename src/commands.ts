@@ -1,4 +1,4 @@
-import { generateTheme, readSettings, saveSettings } from './storage.mjs';
+import { generateTheme, readSettings, saveSettings } from './storage.ts';
 
 export function registerTheme(pi, agentDir, { defaultColor, previewTheme, openPicker }) {
   generateTheme(agentDir, defaultColor());

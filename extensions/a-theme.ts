@@ -1,5 +1,5 @@
 import { getAgentDir, type ExtensionAPI, type ExtensionCommandContext } from "@earendil-works/pi-coding-agent";
-import { registerTheme } from "../src/commands.mjs";
+import { registerTheme } from "../src/commands.ts";
 import { createColorOverlay, type ColorSettings } from "../src/color-overlay.ts";
 import { makeTheme, terminalBase } from "../src/pi-theme.ts";
 

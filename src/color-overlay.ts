@@ -3,7 +3,7 @@ import {
   Input, Key, matchesKey, parseColor, truncateToWidth, visibleWidth,
   type Color, type Component, type Focusable, type TUI,
 } from "@earendil-works/pi-tui";
-import { DEFAULT_COLOR, deriveTheme, normalizeColor } from "./palette.mjs";
+import { DEFAULT_COLOR, deriveTheme, normalizeColor } from "./palette.ts";
 
 export interface ColorSettings {
   color: string;

@@ -1,7 +1,7 @@
 import { Theme, type ThemeBg, type ThemeColor } from "@earendil-works/pi-coding-agent";
 import { colorToHex, type TerminalColorMode } from "@earendil-works/pi-tui";
-import { deriveTheme } from "./palette.mjs";
-import { lighterBase } from "./defaults.mjs";
+import { deriveTheme } from "./palette.ts";
+import { lighterBase } from "./defaults.ts";
 import type { ColorSettings } from "./color-overlay.ts";
 
 const BACKGROUNDS = new Set([

@@ -3,7 +3,7 @@ import { createRequire } from 'node:module';
 import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { describe, test } from 'node:test';
-import { deriveTheme } from '../src/palette.mjs';
+import { deriveTheme } from '../src/palette.ts';
 
 // Use the host's actual Input/key parser. No install or runtime dependency changes.
 // For a global Pi install, set PI_OVERLAY_HOST to its pi-coding-agent directory.

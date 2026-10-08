@@ -1,4 +1,4 @@
-import { normalizeColor } from './palette.mjs';
+import { normalizeColor } from './palette.ts';
 
 // Mix 18% white into the reported terminal background, without changing it.
 export function lighterBase(background) {

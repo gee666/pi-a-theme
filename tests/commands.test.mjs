@@ -3,10 +3,10 @@ import assert from 'node:assert/strict';
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { join } from 'node:path';
-import { registerTheme } from '../src/commands.mjs';
-import { paths, readSettings, generateTheme, saveSettings } from '../src/storage.mjs';
-import { deriveTheme } from '../src/palette.mjs';
-import { lighterBase } from '../src/defaults.mjs';
+import { registerTheme } from '../src/commands.ts';
+import { paths, readSettings, generateTheme, saveSettings } from '../src/storage.ts';
+import { deriveTheme } from '../src/palette.ts';
+import { lighterBase } from '../src/defaults.ts';
 
 const tmp = fileURLToPath(new URL('../tmp/', import.meta.url));
 mkdirSync(tmp, { recursive: true });
@@ -158,7 +158,7 @@ test('lighter default mixes 18% white, preserves channel ordering and handles ex
 });
 
 test('implementation does not write terminal control sequences', () => {
-  for (const file of ['../src/commands.mjs', '../src/storage.mjs', '../src/pi-theme.ts', '../extensions/a-theme.ts']) {
+  for (const file of ['../src/commands.ts', '../src/storage.ts', '../src/pi-theme.ts', '../extensions/a-theme.ts']) {
     const source = readFileSync(new URL(file, import.meta.url), 'utf8');
     assert.doesNotMatch(source, /process\.(stdout|stderr)|\\x1b|\\u001b/);
   }

@@ -45,4 +45,6 @@ npm test
 
 Overlay tests use Pi's native Input and require a local Pi host. If Pi is installed globally, set `PI_OVERLAY_HOST` to its `pi-coding-agent` package directory. Without a host, those tests are skipped; palette and command tests still run.
 
-No build step or runtime dependencies. Pi supplies the extension and TUI APIs.
+No build step or runtime dependencies. Pi supplies the extension and TUI APIs. Tests require Node 22.18 or newer for native TypeScript stripping.
+
+Runtime modules use `.ts` so Pi reloads their imports with `/reload`. Native `.mjs` imports remain cached in Node even when Pi reloads the extension entry point.
