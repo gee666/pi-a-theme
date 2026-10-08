@@ -10,11 +10,31 @@ The terminal background stays unchanged. Only Pi's text, borders and message/too
 
 ## Install
 
+With Pi installed, run:
+
 ```sh
-pi install /path/to/a-theme
+pi install https://github.com/gee666/pi-a-theme.git
 ```
 
-Run `/reload`, then select `a-theme` in `/settings`.
+In Pi, run `/reload`, then select `a-theme` in `/settings`. Open `/a-theme-colors` to preview and save your own colors.
+
+If you previously installed a local checkout, remove that package first with `pi remove /path/to/a-theme` to avoid duplicate command registrations. Your saved colors stay in Pi's agent directory.
+
+To update installed packages:
+
+```sh
+pi update --extensions
+```
+
+Run `/reload` afterward.
+
+To uninstall:
+
+```sh
+pi remove https://github.com/gee666/pi-a-theme.git
+```
+
+Choose another theme in `/settings` and run `/reload`. Uninstalling keeps your saved color settings and generated theme.
 
 ## Choose colors
 
@@ -42,11 +62,19 @@ Seed lightness and saturation are bounded to retain dark blocks and lighter text
 ## Development
 
 ```sh
+git clone https://github.com/gee666/pi-a-theme.git
+cd pi-a-theme
 npm test
 ```
+
+For local development, install the checkout with `pi install /absolute/path/to/pi-a-theme` instead of installing the Git URL.
 
 Overlay tests use Pi's native Input and require a local Pi host. If Pi is installed globally, set `PI_OVERLAY_HOST` to its `pi-coding-agent` package directory. Without a host, those tests are skipped; palette and command tests still run.
 
 No build step or runtime dependencies. Pi supplies the extension and TUI APIs. Tests require Node 22.18 or newer for native TypeScript stripping.
 
 Runtime modules use `.ts` so Pi reloads their imports with `/reload`. Native `.mjs` imports remain cached in Node even when Pi reloads the extension entry point.
+
+## License
+
+[MIT](LICENSE).

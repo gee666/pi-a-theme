@@ -3,6 +3,11 @@
   "version": "0.1.0",
   "description": "A seed-based Pi theme that leaves the terminal background alone.",
   "type": "module",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/gee666/pi-a-theme.git"
+  },
   "keywords": [
     "pi-package",
     "pi-theme"
