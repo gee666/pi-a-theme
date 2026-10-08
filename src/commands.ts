@@ -1,9 +1,9 @@
 import { generateTheme, readSettings, saveSettings } from './storage.ts';
 
 export function registerTheme(pi, agentDir, { terminalColor: getTerminalColor, previewTheme, openPicker }) {
-  generateTheme(agentDir);
+  generateTheme(agentDir, getTerminalColor());
   pi.on('resources_discover', () => ({
-    themePaths: [generateTheme(agentDir)],
+    themePaths: [generateTheme(agentDir, getTerminalColor())],
   }));
 
   pi.registerCommand('a-theme-colors', {
@@ -23,7 +23,7 @@ export function registerTheme(pi, agentDir, { terminalColor: getTerminalColor, p
         original = ctx.ui.getTheme(ctx.ui.theme.name ?? 'system');
         if (!original) throw new Error('Could not capture the current theme');
         const terminalColor = getTerminalColor();
-        const initial = readSettings(agentDir);
+        const initial = readSettings(agentDir, terminalColor);
         const selected = await openPicker(ctx, initial, settings => {
           const result = ctx.ui.setTheme(previewTheme(settings, ctx));
           if (!result.success) throw new Error(result.error ?? 'Could not preview theme');
@@ -32,7 +32,7 @@ export function registerTheme(pi, agentDir, { terminalColor: getTerminalColor, p
         if (selected) {
           // Both values are saved together, only after Apply.
           saveSettings(agentDir, selected);
-          generateTheme(agentDir);
+          generateTheme(agentDir, terminalColor);
           const result = ctx.ui.setTheme('a-theme');
           if (!result.success) {
             throw new Error(`Colors saved; reload Pi and select a-theme. ${result.error ?? ''}`);

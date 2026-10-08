@@ -1,6 +1,6 @@
 import { normalizeColor } from './palette.ts';
 
-export const DEFAULT_SETTINGS = Object.freeze({ color: '#CD9D8A', accent: '#CC397B' });
+export const FALLBACK_COLOR = lighterBase('#000000');
 
 // Mix 18% white into the reported terminal background, without changing it.
 export function lighterBase(background) {

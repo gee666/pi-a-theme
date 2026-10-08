@@ -2,9 +2,9 @@
 
 A Pi theme derived from a base color and an optional accent, using the color relationships in [Blooming Ilacs](https://github.com/gee666/pi-theme-blooming-ilacs).
 
-The default base is `#CD9D8A`, with accent `#CC397B`. Saved choices take priority.
+By default, the base is the terminal's reported background mixed with 18% white, with an automatically derived accent. Saved choices take priority.
 
-The Terminal button offers the terminal's reported background mixed with 18% white. If the terminal does not report its background, Pi's dark-background fallback produces a `#2E2E2E` seed.
+The Terminal button also offers this lighter terminal color. If the terminal does not report its background, Pi's dark-background fallback produces a `#2E2E2E` seed.
 
 The terminal background stays unchanged. Only Pi's text, borders and message/tool blocks receive colors. This package never sets or resets terminal background, foreground or cursor colors.
 
@@ -52,6 +52,17 @@ Tab and Shift+Tab move between controls. Enter activates a button. Ctrl+Enter ap
 The old `/a-theme-color` and `/a-theme-accent` commands have been replaced by `/a-theme-colors`.
 
 Settings live in `~/.pi/agent/a-theme.json`. The generated palette lives in `~/.pi/agent/themes/a-theme.json`; reloads regenerate it. Both paths follow `PI_CODING_AGENT_DIR`. The package checkout stays unchanged when choosing colors.
+
+## Example colors
+
+For a warm base with a pink accent, open `/a-theme-colors` and enter:
+
+- Base: `#CD9D8A`
+- Accent: `#CC397B`
+
+Preview the result, then choose Apply. These are example colors, not the defaults. The same preset is available in [`examples/colors.json`](examples/colors.json).
+
+To try the terminal-derived colors instead, choose Terminal and enable Auto accent before applying.
 
 ## Color derivation
 
