@@ -1,10 +1,10 @@
 # a-theme
 
-A Pi theme derived from one color, with an optional separate accent. The default seed is `#6E452F`.
+A Pi theme derived from a base color and an optional accent, using the color relationships in [Blooming Ilacs](https://github.com/gee666/pi-theme-blooming-ilacs).
 
-Text, borders, syntax colors and message/tool blocks follow the color relationships in [Blooming Ilacs](https://github.com/gee666/pi-theme-blooming-ilacs). The default palette matches its role colors.
+By default, the base is the terminal's reported background mixed with 18% white. Saved choices take priority. If the terminal does not report its background, Pi's dark-background fallback produces a `#2E2E2E` seed.
 
-The terminal's own background stays visible. This package never sets or resets terminal background, foreground or cursor colors. Only Pi's text and named blocks receive colors.
+The terminal background stays unchanged. Only Pi's text, borders and message/tool blocks receive colors. This package never sets or resets terminal background, foreground or cursor colors.
 
 ## Install
 
@@ -14,21 +14,28 @@ pi install /path/to/a-theme
 
 Run `/reload`, then select `a-theme` in `/settings`.
 
-## Commands
+## Choose colors
 
-- `/a-theme-color #6E452F`: set the base color.
-- `/a-theme-accent #EA2175`: set a separate accent.
-- `/a-theme-accent auto`: derive the accent from the base again.
+Run `/a-theme-colors` to open the overlay.
 
-Without an argument, either command opens a color input. Colors must use six hex digits. Commands select a-theme, save your choices and reload Pi to apply them.
+- Edit Base and Accent as `#RRGGBB`. Valid edits preview immediately, both in the conversation and in the overlay samples.
+- Leave Accent blank or use Auto accent to derive it from the base.
+- Terminal uses a lighter version of this terminal's background as the base, keeping the accent choice.
+- Reset restores the values from when you opened the overlay.
+- Apply saves both colors together, selects a-theme and reloads Pi.
+- Cancel or Escape restores the previous theme without saving.
 
-Settings live in `~/.pi/agent/a-theme.json`. The generated palette lives in `~/.pi/agent/themes/a-theme.json`; commands and reloads regenerate it. Both paths follow `PI_CODING_AGENT_DIR`. The package checkout stays unchanged.
+Tab and Shift+Tab move between controls. Enter activates a button. Ctrl+Enter applies from anywhere. Invalid or incomplete hex values keep the last valid preview and block Apply.
+
+The old `/a-theme-color` and `/a-theme-accent` commands have been replaced by `/a-theme-colors`.
+
+Settings live in `~/.pi/agent/a-theme.json`. The generated palette lives in `~/.pi/agent/themes/a-theme.json`; reloads regenerate it. Both paths follow `PI_CODING_AGENT_DIR`. The package checkout stays unchanged when choosing colors.
 
 ## Color derivation
 
-Each role keeps its reference HSL hue, saturation and lightness offsets from the base. An explicit accent independently controls the pink/purple family, including headings and syntax accents. Block fills and earth-tone roles still follow the base.
+Each role keeps its reference HSL hue, saturation and lightness offsets from the base. An explicit accent independently controls the pink/purple family, including headings and syntax accents. Block fills and earth-tone roles follow the base. Using base `#6E452F` and automatic accent reproduces the reference role colors.
 
-Seed lightness and saturation are bounded to retain the reference's dark blocks and lighter text, so very bright seeds are not used literally as block fills. The palette is designed for dark terminals. It does not detect or recolor the terminal background, so contrast on arbitrary terminal backgrounds is not guaranteed.
+Seed lightness and saturation are bounded to retain dark blocks and lighter text, so very bright seeds are not used literally as block fills. The palette is designed for dark terminals. Contrast on arbitrary terminal backgrounds is not guaranteed.
 
 ## Development
 
@@ -36,4 +43,6 @@ Seed lightness and saturation are bounded to retain the reference's dark blocks 
 npm test
 ```
 
-No build step or runtime dependencies. Pi supplies the extension API.
+Overlay tests use Pi's native Input and require a local Pi host. If Pi is installed globally, set `PI_OVERLAY_HOST` to its `pi-coding-agent` package directory. Without a host, those tests are skipped; palette and command tests still run.
+
+No build step or runtime dependencies. Pi supplies the extension and TUI APIs.

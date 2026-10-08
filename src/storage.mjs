@@ -10,9 +10,9 @@ export function paths(agentDir) {
   };
 }
 
-export function readSettings(agentDir) {
+export function readSettings(agentDir, defaultColor = DEFAULT_COLOR) {
   const file = paths(agentDir).config;
-  if (!existsSync(file)) return { color: DEFAULT_COLOR };
+  if (!existsSync(file)) return { color: normalizeColor(defaultColor) };
   const value = JSON.parse(readFileSync(file, 'utf8'));
   if (!value || typeof value !== 'object' || Array.isArray(value)) {
     throw new Error('Invalid a-theme settings');
@@ -38,8 +38,8 @@ function writeJson(file, value) {
   }
 }
 
-export function generateTheme(agentDir) {
-  const settings = readSettings(agentDir);
+export function generateTheme(agentDir, defaultColor = DEFAULT_COLOR) {
+  const settings = readSettings(agentDir, defaultColor);
   const file = paths(agentDir).theme;
   writeJson(file, deriveTheme(settings.color, settings.accent));
   return file;
