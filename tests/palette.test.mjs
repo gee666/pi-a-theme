@@ -1,7 +1,8 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { spawnSync } from 'node:child_process';
-import { DEFAULT_COLOR, normalizeColor, deriveTheme } from '../src/palette.ts';
+import '../src/palette.js';
+const { DEFAULT_COLOR, normalizeColor, deriveTheme } = globalThis.PiPalette;
 
 // Portable snapshot of the reference's resolved colors. No local Pi install or
 // reference checkout is needed to run these tests.
@@ -118,10 +119,10 @@ test('each call returns fresh JSON with no shared mutable state', () => {
 });
 
 test('importing and deriving palettes emits no terminal output or OSC writes', () => {
-  const moduleUrl = new URL('../src/palette.ts', import.meta.url).href;
+  const moduleUrl = new URL('../src/palette.js', import.meta.url).href;
   const result = spawnSync(process.execPath, ['--input-type=module', '-e',
-    `import { deriveTheme } from ${JSON.stringify(moduleUrl)};
-     deriveTheme(); deriveTheme('#FFFFFF', '#000000');`],
+    `import ${JSON.stringify(moduleUrl)};
+     PiPalette.deriveTheme(); PiPalette.deriveTheme('#FFFFFF', '#000000');`],
   { encoding: 'utf8', timeout: 5000 });
   assert.ifError(result.error);
   assert.equal(result.status, 0);

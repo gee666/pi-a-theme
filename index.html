@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <meta name="description" content="Build a Pi theme, preview a session, and download the theme JSON.">
+  <title>a-theme | Pi theme studio</title>
+  <link rel="stylesheet" href="styles.css">
+  <script defer src="src/palette.js"></script>
+  <script defer src="app.js"></script>
+</head>
+<body>
+  <noscript><p class="background-note">Enable JavaScript to generate and download themes. All processing stays in your browser.</p></noscript>
+  <header class="site-header">
+    <a class="brand" href="index.html" aria-label="a-theme home"><span class="brand-mark" aria-hidden="true">a.</span><span>a-theme</span></a>
+    <span class="studio-label">Pi theme studio</span>
+    <span class="local-label">Local by design <span aria-hidden="true">/</span> JSON export</span>
+  </header>
+
+  <main class="workspace">
+    <aside class="controls" aria-labelledby="builder-title">
+      <div class="intro">
+        <p class="eyebrow">Theme builder</p>
+        <h1 id="builder-title">Make Pi yours.</h1>
+        <p>Pick your colors. Check the session. Take the theme with you.</p>
+      </div>
+
+      <form id="theme-form" novalidate>
+        <div class="field name-field">
+          <label for="theme-name">Theme name</label>
+          <input id="theme-name" name="theme-name" type="text" value="my-pi-theme" autocomplete="off" spellcheck="false" aria-describedby="name-help form-error">
+          <p class="field-help" id="name-help">1–64 letters, numbers, hyphens or underscores. Also used as the filename.</p>
+        </div>
+
+        <fieldset class="color-fields">
+          <legend>Color foundation</legend>
+          <div class="color-field">
+            <div class="field-heading"><label for="background-picker">Terminal background</label><span class="field-tag">Light / dark</span></div>
+            <div class="color-inputs">
+              <input id="background-picker" name="background" type="color" value="#171717" aria-describedby="background-help">
+              <label class="sr-only" for="background-hex">Terminal background hex color</label>
+              <input id="background-hex" name="background-hex" class="hex-input" type="text" value="#171717" maxlength="7" pattern="#[0-9a-fA-F]{6}" autocomplete="off" spellcheck="false" aria-describedby="hex-help background-help form-error">
+            </div>
+            <p id="background-help" class="field-help">Match your terminal. Pale backgrounds generate a light palette automatically.</p>
+          </div>
+          <div class="color-field">
+            <div class="field-heading"><label for="base-picker">Base color</label><span class="field-tag">Main palette</span></div>
+            <div class="color-inputs">
+              <input id="base-picker" name="base" type="color" value="#CD9D8A" aria-describedby="base-help">
+              <label class="sr-only" for="base-hex">Base hex color</label>
+              <input id="base-hex" name="base-hex" class="hex-input" type="text" value="#CD9D8A" maxlength="7" pattern="#[0-9a-fA-F]{6}" autocomplete="off" spellcheck="false" aria-describedby="hex-help base-help form-error">
+            </div>
+            <p id="base-help" class="field-help">Sets text, borders, and panels. Lightness adapts to the palette mode.</p>
+          </div>
+          <div class="color-field">
+            <div class="field-heading"><label for="accent-picker">Accent color</label><span class="field-tag">Highlights</span></div>
+            <div class="color-inputs">
+              <input id="accent-picker" name="accent" type="color" value="#CC397B" aria-describedby="accent-help">
+              <label class="sr-only" for="accent-hex">Accent hex color</label>
+              <input id="accent-hex" name="accent-hex" class="hex-input" type="text" value="#CC397B" maxlength="7" pattern="#[0-9a-fA-F]{6}" autocomplete="off" spellcheck="false" aria-describedby="hex-help accent-help form-error">
+            </div>
+            <p id="accent-help" class="field-help">Colors headings, syntax, and active details.</p>
+          </div>
+          <label class="checkbox-row" for="auto-accent"><input id="auto-accent" name="auto-accent" type="checkbox" aria-describedby="auto-accent-help"><span>Derive accent from base</span></label>
+          <p id="auto-accent-help" class="field-help">Let the base color set the whole palette.</p>
+          <p id="hex-help" class="hex-help">Hex colors use six digits, like #CD9D8A.</p>
+        </fieldset>
+
+        <p id="form-error" class="form-error" role="alert" aria-atomic="true"></p>
+        <div class="actions">
+          <button id="download-button" class="button button-primary" type="button">Download theme <span aria-hidden="true">↓</span></button>
+          <button id="reset-button" class="button button-secondary" type="button">Reset</button>
+        </div>
+        <p id="status" class="status" role="status" aria-atomic="true">Ready to export.</p>
+      </form>
+
+      <section class="install" aria-labelledby="install-title">
+        <h2 id="install-title">Use it in Pi</h2>
+        <ol>
+          <li>Save the downloaded JSON in your themes folder.
+            <dl class="install-paths">
+              <dt>macOS / Linux / WSL</dt><dd><code>~/.pi/agent/themes/</code></dd>
+              <dt>Windows</dt><dd><code>%USERPROFILE%\.pi\agent\themes\</code></dd>
+            </dl>
+          </li>
+          <li>Run <code>/reload</code>, then select your theme in <code>/settings</code>.</li>
+        </ol>
+        <p class="background-note">Your background selects a light or dark palette, but the exported theme won't change the terminal background itself. If you set <code>PI_CODING_AGENT_DIR</code>, use its <code>themes/</code> folder instead. Your browser cannot install into Pi automatically.</p>
+      </section>
+    </aside>
+
+    <div class="preview-column">
+      <section class="preview-section" aria-labelledby="preview-title">
+        <div class="section-heading">
+          <div><p class="eyebrow">Live preview</p><h2 id="preview-title">A session in your colors</h2></div>
+          <span id="appearance-label" class="sample-label">Dark palette</span>
+        </div>
+        <div class="terminal-window">
+          <div class="terminal-chrome"><div class="window-dots" aria-hidden="true"><i></i><i></i><i></i></div><span>pi <span class="chrome-divider">/</span> lorem-project</span><span class="terminal-kind">session preview</span></div>
+          <div id="session-preview" class="session" role="region" aria-labelledby="preview-title" tabindex="0">
+            <div class="session-topline"><span><strong class="pi-wordmark">π</strong> Pi coding agent</span><span class="session-muted">~/projects/lorem</span></div>
+
+            <div class="user-message">
+              <div class="message-label">you</div>
+              <p>Lorem ipsum dolor sit amet. Add a small greeting helper and show me what changed.</p>
+            </div>
+
+            <div class="thinking"><span class="thinking-label">thinking</span><p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. I'll check the helper, update the example, and run the tests.</p></div>
+
+            <article class="assistant-message" aria-label="Sample assistant response">
+              <div class="message-label assistant-label">pi</div>
+              <h3>Lorem ipsum, a small change</h3>
+              <p>Consectetur adipiscing elit. This helper returns a greeting using <code>name</code>, with a default for an empty value.</p>
+              <blockquote>Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia curae.</blockquote>
+              <ul><li>Keep the function small and the output predictable.</li><li>Add an example for the default greeting.</li></ul>
+              <p>See the <a href="https://en.wikipedia.org/wiki/Lorem_ipsum" target="_blank" rel="noreferrer">sample reference</a> <span class="link-url">https://en.wikipedia.org/wiki/Lorem_ipsum</span></p>
+              <div class="code-block"><div class="code-heading">typescript <span>greeting.ts</span></div><pre><code><span class="syntax-comment">// A little hello for the example</span>
+<span class="syntax-keyword">export function</span> <span class="syntax-function">greet</span><span class="syntax-punctuation">(</span><span class="syntax-variable">name</span><span class="syntax-punctuation">:</span> <span class="syntax-type">string</span><span class="syntax-punctuation">)</span><span class="syntax-punctuation">:</span> <span class="syntax-type">string</span> <span class="syntax-punctuation">{</span>
+  <span class="syntax-keyword">const</span> <span class="syntax-variable">label</span> <span class="syntax-operator">=</span> <span class="syntax-variable">name</span><span class="syntax-punctuation">.</span><span class="syntax-function">trim</span><span class="syntax-punctuation">()</span> <span class="syntax-operator">||</span> <span class="syntax-string">"world"</span><span class="syntax-punctuation">;</span>
+  <span class="syntax-keyword">return</span> <span class="syntax-string">`Hello, ${</span><span class="syntax-variable">label</span><span class="syntax-string">}!`</span><span class="syntax-punctuation">;</span>
+<span class="syntax-punctuation">}</span>
+<span class="syntax-function">greet</span><span class="syntax-punctuation">(</span><span class="syntax-string">"Pi"</span><span class="syntax-punctuation">);</span> <span class="syntax-comment">// example </span><span class="syntax-number">01</span></code></pre></div>
+              <hr>
+            </article>
+
+            <div class="tool-block tool-pending"><div class="tool-heading"><span class="tool-state pending-state">◌ pending</span><strong>bash</strong><span class="tool-command">npm run test</span></div><p>Running the greeting tests...</p></div>
+            <div class="tool-block tool-success"><div class="tool-heading"><span class="tool-state success-state">✓ success</span><strong>read</strong><span class="tool-command">src/greeting.ts</span></div><p>Read 8 lines. Lorem ipsum dolor sit amet.</p></div>
+            <div class="tool-block tool-error"><div class="tool-heading"><span class="tool-state error-state">× error</span><strong>read</strong><span class="tool-command">src/missing.ts</span></div><p>File not found. Check the path and try again.</p></div>
+
+            <div class="diff-block" aria-label="Sample code diff"><div class="diff-heading">edit <span>src/greeting.ts</span></div><pre><code><span class="diff-context">  export function greet(name: string): string {</span>
+<span class="diff-removed">-   return "Hello, " + name;</span>
+<span class="diff-added">+   return `Hello, ${name.trim() || "world"}!`;</span>
+<span class="diff-context">  }</span></code></pre></div>
+
+            <div class="custom-message"><span class="custom-label">note</span><span>Lorem ipsum preview. No tools are actually running.</span></div>
+            <div class="preview-details"><span class="search-example">lorem</span><span class="selected-example">greeting.ts selected</span><span class="warning-example">! Sample warning</span></div>
+            <div class="thinking-levels" aria-label="Thinking level color samples"><span class="level-off">off</span><span class="level-minimal">minimal</span><span class="level-low">low</span><span class="level-medium">medium</span><span class="level-high">high</span><span class="level-xhigh">xhigh</span><span class="level-max">max</span></div>
+            <div class="session-input"><div class="input-prompt"><span aria-hidden="true">›</span><span>Type your next message...</span><span class="input-cursor" aria-hidden="true"></span></div><div class="input-hints"><span>enter to send <span class="session-dim">·</span> shift+enter for newline</span><span class="bash-mode">! bash</span></div></div>
+            <footer class="session-footer"><span>lorem-project <span class="session-dim">·</span> main</span><span>thinking: medium <span class="session-dim">·</span> 4.2k tokens</span></footer>
+          </div>
+        </div>
+        <p class="preview-caption">A Pi-style sample, not the Pi renderer. Your terminal font and rendering may differ.</p>
+        <p id="contrast-note" class="preview-caption"></p>
+      </section>
+
+      <section class="palette-section" aria-labelledby="palette-title">
+        <div class="section-heading"><div><p class="eyebrow">Fine-tune your theme</p><h2 id="palette-title">Color roles</h2></div><span id="override-count" class="sample-label" role="status">0 custom colors</span></div>
+        <div class="palette-toolbar"><p id="palette-help">Click any color to edit it. Custom colors stay fixed when you change the base, accent, or background. Reset a color to follow the generator again.</p><button id="reset-overrides-button" class="button button-secondary" type="button" disabled>Reset custom colors</button></div>
+        <div id="palette-swatches" class="palette-swatches" aria-label="Editable theme color roles"></div>
+      </section>
+    </div>
+  </main>
+  <footer class="site-footer"><span>a-theme / Pi theme studio</span><span>No account. No upload. Just a theme file.</span></footer>
+</body>
+</html>
