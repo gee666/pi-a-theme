@@ -8,6 +8,7 @@
   <title>a-theme | Pi theme studio</title>
   <link rel="stylesheet" href="styles.css">
   <script defer src="src/palette.js"></script>
+  <script defer src="src/preview.js"></script>
   <script defer src="app.js"></script>
 </head>
 <body>
@@ -96,50 +97,53 @@
           <div><p class="eyebrow">Live preview</p><h2 id="preview-title">A session in your colors</h2></div>
           <span id="appearance-label" class="sample-label">Dark palette</span>
         </div>
+        <p id="preview-edit-status" class="preview-edit-status" role="status">Click the preview to edit a color. All colors are also available below.</p>
+        <input id="preview-color-picker" class="preview-picker" type="color" value="#BFAFA1" tabindex="-1" aria-label="Selected preview color">
         <div class="terminal-window">
           <div class="terminal-chrome"><div class="window-dots" aria-hidden="true"><i></i><i></i><i></i></div><span>pi <span class="chrome-divider">/</span> lorem-project</span><span class="terminal-kind">session preview</span></div>
-          <div id="session-preview" class="session" role="region" aria-labelledby="preview-title" tabindex="0">
-            <div class="session-topline"><span><strong class="pi-wordmark">π</strong> Pi coding agent</span><span class="session-muted">~/projects/lorem</span></div>
+          <div id="session-preview" class="session" role="region" aria-labelledby="preview-title" aria-describedby="preview-edit-help" tabindex="0" data-theme-fg="text" data-theme-bg="terminal">
+            <div class="session-topline" data-theme-fg="muted"><span><strong class="pi-wordmark" data-theme-fg="accent">π</strong> Pi coding agent</span><span class="session-muted" data-theme-fg="muted">~/projects/lorem</span></div>
 
-            <div class="user-message">
+            <div class="user-message" data-theme-fg="userMessageText" data-theme-bg="userMessageBg">
               <div class="message-label">you</div>
               <p>Lorem ipsum dolor sit amet. Add a small greeting helper and show me what changed.</p>
             </div>
 
-            <div class="thinking"><span class="thinking-label">thinking</span><p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. I'll check the helper, update the example, and run the tests.</p></div>
+            <div class="thinking" data-theme-fg="thinkingText"><span class="thinking-label" data-theme-fg="thinkingMedium">thinking</span><p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. I'll check the helper, update the example, and run the tests.</p></div>
 
             <article class="assistant-message" aria-label="Sample assistant response">
-              <div class="message-label assistant-label">pi</div>
-              <h3>Lorem ipsum, a small change</h3>
-              <p>Consectetur adipiscing elit. This helper returns a greeting using <code>name</code>, with a default for an empty value.</p>
-              <blockquote>Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia curae.</blockquote>
-              <ul><li>Keep the function small and the output predictable.</li><li>Add an example for the default greeting.</li></ul>
-              <p>See the <a href="https://en.wikipedia.org/wiki/Lorem_ipsum" target="_blank" rel="noreferrer">sample reference</a> <span class="link-url">https://en.wikipedia.org/wiki/Lorem_ipsum</span></p>
-              <div class="code-block"><div class="code-heading">typescript <span>greeting.ts</span></div><pre><code><span class="syntax-comment">// A little hello for the example</span>
-<span class="syntax-keyword">export function</span> <span class="syntax-function">greet</span><span class="syntax-punctuation">(</span><span class="syntax-variable">name</span><span class="syntax-punctuation">:</span> <span class="syntax-type">string</span><span class="syntax-punctuation">)</span><span class="syntax-punctuation">:</span> <span class="syntax-type">string</span> <span class="syntax-punctuation">{</span>
-  <span class="syntax-keyword">const</span> <span class="syntax-variable">label</span> <span class="syntax-operator">=</span> <span class="syntax-variable">name</span><span class="syntax-punctuation">.</span><span class="syntax-function">trim</span><span class="syntax-punctuation">()</span> <span class="syntax-operator">||</span> <span class="syntax-string">"world"</span><span class="syntax-punctuation">;</span>
-  <span class="syntax-keyword">return</span> <span class="syntax-string">`Hello, ${</span><span class="syntax-variable">label</span><span class="syntax-string">}!`</span><span class="syntax-punctuation">;</span>
-<span class="syntax-punctuation">}</span>
-<span class="syntax-function">greet</span><span class="syntax-punctuation">(</span><span class="syntax-string">"Pi"</span><span class="syntax-punctuation">);</span> <span class="syntax-comment">// example </span><span class="syntax-number">01</span></code></pre></div>
-              <hr>
+              <div class="message-label assistant-label" data-theme-fg="accent">pi</div>
+              <h3 data-theme-fg="mdHeading">Lorem ipsum, a small change</h3>
+              <p>Consectetur adipiscing elit. This helper returns a greeting using <code data-theme-fg="mdCode">name</code>, with a default for an empty value.</p>
+              <blockquote data-theme-fg="mdQuote" data-theme-border="mdQuoteBorder">Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia curae.</blockquote>
+              <ul><li><span class="list-bullet" data-theme-fg="mdListBullet" aria-hidden="true">•</span>Keep the function small and the output predictable.</li><li><span class="list-bullet" data-theme-fg="mdListBullet" aria-hidden="true">•</span>Add an example for the default greeting.</li></ul>
+              <p>See the <a data-theme-fg="mdLink" href="https://en.wikipedia.org/wiki/Lorem_ipsum" target="_blank" rel="noreferrer">sample reference</a> <span class="link-url" data-theme-fg="mdLinkUrl">https://en.wikipedia.org/wiki/Lorem_ipsum</span></p>
+              <div class="code-block" data-theme-fg="mdCodeBlock" data-theme-border="mdCodeBlockBorder"><div class="code-heading" data-theme-fg="muted" data-theme-border="mdCodeBlockBorder">typescript <span>greeting.ts</span></div><pre><code><span class="syntax-comment" data-theme-fg="syntaxComment">// A little hello for the example</span>
+<span class="syntax-keyword" data-theme-fg="syntaxKeyword">export function</span> <span class="syntax-function" data-theme-fg="syntaxFunction">greet</span><span class="syntax-punctuation" data-theme-fg="syntaxPunctuation">(</span><span class="syntax-variable" data-theme-fg="syntaxVariable">name</span><span class="syntax-punctuation" data-theme-fg="syntaxPunctuation">:</span> <span class="syntax-type" data-theme-fg="syntaxType">string</span><span class="syntax-punctuation" data-theme-fg="syntaxPunctuation">)</span><span class="syntax-punctuation" data-theme-fg="syntaxPunctuation">:</span> <span class="syntax-type" data-theme-fg="syntaxType">string</span> <span class="syntax-punctuation" data-theme-fg="syntaxPunctuation">{</span>
+  <span class="syntax-keyword" data-theme-fg="syntaxKeyword">const</span> <span class="syntax-variable" data-theme-fg="syntaxVariable">label</span> <span class="syntax-operator" data-theme-fg="syntaxOperator">=</span> <span class="syntax-variable" data-theme-fg="syntaxVariable">name</span><span class="syntax-punctuation" data-theme-fg="syntaxPunctuation">.</span><span class="syntax-function" data-theme-fg="syntaxFunction">trim</span><span class="syntax-punctuation" data-theme-fg="syntaxPunctuation">()</span> <span class="syntax-operator" data-theme-fg="syntaxOperator">||</span> <span class="syntax-string" data-theme-fg="syntaxString">"world"</span><span class="syntax-punctuation" data-theme-fg="syntaxPunctuation">;</span>
+  <span class="syntax-keyword" data-theme-fg="syntaxKeyword">return</span> <span class="syntax-string" data-theme-fg="syntaxString">`Hello, ${</span><span class="syntax-variable" data-theme-fg="syntaxVariable">label</span><span class="syntax-string" data-theme-fg="syntaxString">}!`</span><span class="syntax-punctuation" data-theme-fg="syntaxPunctuation">;</span>
+<span class="syntax-punctuation" data-theme-fg="syntaxPunctuation">}</span>
+<span class="syntax-function" data-theme-fg="syntaxFunction">greet</span><span class="syntax-punctuation" data-theme-fg="syntaxPunctuation">(</span><span class="syntax-string" data-theme-fg="syntaxString">"Pi"</span><span class="syntax-punctuation" data-theme-fg="syntaxPunctuation">);</span> <span class="syntax-comment" data-theme-fg="syntaxComment">// example </span><span class="syntax-number" data-theme-fg="syntaxNumber">01</span></code></pre></div>
+              <hr data-theme-border="mdHr">
             </article>
 
-            <div class="tool-block tool-pending"><div class="tool-heading"><span class="tool-state pending-state">◌ pending</span><strong>bash</strong><span class="tool-command">npm run test</span></div><p>Running the greeting tests...</p></div>
-            <div class="tool-block tool-success"><div class="tool-heading"><span class="tool-state success-state">✓ success</span><strong>read</strong><span class="tool-command">src/greeting.ts</span></div><p>Read 8 lines. Lorem ipsum dolor sit amet.</p></div>
-            <div class="tool-block tool-error"><div class="tool-heading"><span class="tool-state error-state">× error</span><strong>read</strong><span class="tool-command">src/missing.ts</span></div><p>File not found. Check the path and try again.</p></div>
+            <div class="tool-block tool-pending" data-theme-fg="toolOutput" data-theme-bg="toolPendingBg"><div class="tool-heading"><span class="tool-state pending-state" data-theme-fg="warning">◌ pending</span><strong data-theme-fg="toolTitle">bash</strong><span class="tool-command" data-theme-fg="muted">npm run test</span></div><p>Running the greeting tests...</p></div>
+            <div class="tool-block tool-success" data-theme-fg="toolOutput" data-theme-bg="toolSuccessBg"><div class="tool-heading"><span class="tool-state success-state" data-theme-fg="success">✓ success</span><strong data-theme-fg="toolTitle">read</strong><span class="tool-command" data-theme-fg="muted">src/greeting.ts</span></div><p>Read 8 lines. Lorem ipsum dolor sit amet.</p></div>
+            <div class="tool-block tool-error" data-theme-fg="toolOutput" data-theme-bg="toolErrorBg"><div class="tool-heading"><span class="tool-state error-state" data-theme-fg="error">× error</span><strong data-theme-fg="toolTitle">read</strong><span class="tool-command" data-theme-fg="muted">src/missing.ts</span></div><p>File not found. Check the path and try again.</p></div>
 
-            <div class="diff-block" aria-label="Sample code diff"><div class="diff-heading">edit <span>src/greeting.ts</span></div><pre><code><span class="diff-context">  export function greet(name: string): string {</span>
-<span class="diff-removed">-   return "Hello, " + name;</span>
-<span class="diff-added">+   return `Hello, ${name.trim() || "world"}!`;</span>
-<span class="diff-context">  }</span></code></pre></div>
+            <div class="diff-block" aria-label="Sample code diff" data-theme-border="borderMuted"><div class="diff-heading" data-theme-fg="toolTitle" data-theme-border="borderMuted">edit <span data-theme-fg="muted">src/greeting.ts</span></div><pre><code><span class="diff-context" data-theme-fg="toolDiffContext">  export function greet(name: string): string {</span>
+<span class="diff-removed" data-theme-fg="toolDiffRemoved">-   return "Hello, " + name;</span>
+<span class="diff-added" data-theme-fg="toolDiffAdded">+   return `Hello, ${name.trim() || "world"}!`;</span>
+<span class="diff-context" data-theme-fg="toolDiffContext">  }</span></code></pre></div>
 
-            <div class="custom-message"><span class="custom-label">note</span><span>Lorem ipsum preview. No tools are actually running.</span></div>
-            <div class="preview-details"><span class="search-example">lorem</span><span class="selected-example">greeting.ts selected</span><span class="warning-example">! Sample warning</span></div>
-            <div class="thinking-levels" aria-label="Thinking level color samples"><span class="level-off">off</span><span class="level-minimal">minimal</span><span class="level-low">low</span><span class="level-medium">medium</span><span class="level-high">high</span><span class="level-xhigh">xhigh</span><span class="level-max">max</span></div>
-            <div class="session-input"><div class="input-prompt"><span aria-hidden="true">›</span><span>Type your next message...</span><span class="input-cursor" aria-hidden="true"></span></div><div class="input-hints"><span>enter to send <span class="session-dim">·</span> shift+enter for newline</span><span class="bash-mode">! bash</span></div></div>
-            <footer class="session-footer"><span>lorem-project <span class="session-dim">·</span> main</span><span>thinking: medium <span class="session-dim">·</span> 4.2k tokens</span></footer>
+            <div class="custom-message" data-theme-fg="customMessageText" data-theme-bg="customMessageBg"><span class="custom-label" data-theme-fg="customMessageLabel">note</span><span>Lorem ipsum preview. No tools are actually running.</span></div>
+            <div class="preview-details"><span class="search-example" data-theme-fg="searchMatchText" data-theme-bg="searchMatchBg">lorem</span><span class="selected-example" data-theme-bg="selectedBg">greeting.ts selected</span><span class="warning-example" data-theme-fg="warning">! Sample warning</span></div>
+            <div class="thinking-levels" aria-label="Thinking level color samples"><span class="level-off" data-theme-fg="thinkingOff" data-theme-border="thinkingOff">off</span><span class="level-minimal" data-theme-fg="thinkingMinimal" data-theme-border="thinkingMinimal">minimal</span><span class="level-low" data-theme-fg="thinkingLow" data-theme-border="thinkingLow">low</span><span class="level-medium" data-theme-fg="thinkingMedium" data-theme-border="thinkingMedium">medium</span><span class="level-high" data-theme-fg="thinkingHigh" data-theme-border="thinkingHigh">high</span><span class="level-xhigh" data-theme-fg="thinkingXhigh" data-theme-border="thinkingXhigh">xhigh</span><span class="level-max" data-theme-fg="thinkingMax" data-theme-border="thinkingMax">max</span></div>
+            <div class="session-input" data-theme-border-top="borderAccent" data-theme-border-bottom="border"><div class="input-prompt" data-theme-fg="muted"><span aria-hidden="true" data-theme-fg="accent">›</span><span>Type your next message...</span><span class="input-cursor" aria-hidden="true" data-theme-bg="accent"></span></div><div class="input-hints" data-theme-fg="dim"><span>enter to send <span class="session-dim" data-theme-fg="dim">·</span> shift+enter for newline</span><span class="bash-mode" data-theme-fg="bashMode">! bash</span></div></div>
+            <footer class="session-footer" data-theme-fg="muted"><span>lorem-project <span class="session-dim" data-theme-fg="dim">·</span> main</span><span>thinking: medium <span class="session-dim" data-theme-fg="dim">·</span> 4.2k tokens</span></footer>
           </div>
         </div>
+        <p id="preview-edit-help" class="preview-caption">Click text or the gaps between letters to edit its color. Click panel padding to edit its background. Empty terminal space edits the background control, not your actual terminal. You can also use the color swatches below with the keyboard.</p>
         <p class="preview-caption">A Pi-style sample, not the Pi renderer. Your terminal font and rendering may differ.</p>
         <p id="contrast-note" class="preview-caption"></p>
       </section>

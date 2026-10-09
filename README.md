@@ -10,8 +10,12 @@ Open [`index.html`](index.html) in a browser. No server, framework, installation
 2. Match the background to your terminal. Light backgrounds automatically generate a light palette; dark backgrounds keep the original derivation.
 3. Choose base and accent colors with the native color pickers or enter six-digit hex values. Enable **Derive accent from base** for an automatic accent.
 4. Inspect the Pi-style lorem ipsum session, including markdown, syntax highlighting, tool states, diffs, and thinking levels. All 55 generated color roles appear below it.
-5. Optionally click any color swatch in **Color roles** to open its color picker. Changes update the preview and downloaded JSON.
+5. Click directly in the preview or use any swatch in **Color roles** to open its color picker. Changes update the preview and downloaded JSON.
 6. Click **Download theme**.
+
+In the preview, click text or the spaces between its letters to edit the text color. Click panel padding or unused space beside a line to edit the background underneath. Borders, syntax tokens, and list bullets select their own roles. The status above the preview names the selected role.
+
+Clicking empty terminal space edits the background control, which can switch between light and dark palette generation. It does not add a terminal-background override to the downloaded theme. Ordinary clicks on sample links edit their color instead of navigating. Dragging still selects text; modifier-clicks keep their usual browser behavior. Keyboard users can edit every color through the swatches.
 
 Custom colors stay fixed when you change the base, accent, or background. Each edited role has a Reset button to follow the generator again. **Reset custom colors** clears all overrides without changing your foundation colors or theme name.
 
@@ -59,7 +63,8 @@ If you installed a local checkout, remove that path instead. Choose another them
 
 - `index.html` and `styles.css`: controls and sample session.
 - `src/palette.js`: pure color derivation and export validation, exposed as `PiPalette` through a classic script for local-file support.
-- `app.js`: live preview, individual color overrides, local storage, and JSON download.
+- `src/preview.js`: layout-based text, border, and background hit testing.
+- `app.js`: live preview, click-to-edit and swatch overrides, local storage, and JSON download.
 
 Tests require Node.js 18 or newer and no installed dependencies:
 

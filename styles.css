@@ -109,6 +109,7 @@ input[type="checkbox"] { width: 16px; height: 16px; margin: 0; accent-color: var
   font-size: 12px;
   line-height: 1.7;
   overflow-wrap: anywhere;
+  cursor: crosshair;
   scrollbar-color: var(--pi-scrollbarThumb, #825E45) var(--terminal-bg);
 }
 .session::selection, .session ::selection { color: var(--pi-text, #BDAE9D); background: var(--pi-selectedBg, #3E3129); }
@@ -127,7 +128,9 @@ input[type="checkbox"] { width: 16px; height: 16px; margin: 0; accent-color: var
 .assistant-message p code { color: var(--pi-mdCode, #FEC5E9); font-family: inherit; }
 .assistant-message blockquote { margin: 13px 0; padding: 3px 0 3px 12px; border-left: 2px solid var(--pi-mdQuoteBorder, #97765F); color: var(--pi-mdQuote, #FEC5E9); }
 .assistant-message ul { margin: 12px 0; padding-left: 20px; }
-.assistant-message li::marker { color: var(--pi-mdListBullet, #E667A4); }
+.assistant-message li { position: relative; list-style: none; }
+.list-bullet { position: absolute; right: calc(100% + 8px); color: var(--pi-mdListBullet, #E667A4); }
+.session a { cursor: crosshair; }
 .assistant-message a { color: var(--pi-mdLink, #FFD0AA); text-decoration-thickness: 1px; text-underline-offset: 3px; }
 .link-url { margin-left: 6px; color: var(--pi-mdLinkUrl, #A08979); font-size: 10px; }
 .assistant-message hr { margin: 18px 0; border: 0; border-top: 1px solid var(--pi-mdHr, #503C31); }
@@ -184,6 +187,9 @@ input[type="checkbox"] { width: 16px; height: 16px; margin: 0; accent-color: var
 .input-hints { display: flex; justify-content: space-between; gap: 15px; margin-top: 9px; color: var(--pi-dim, #746358); font-size: 9px; }
 .bash-mode { color: var(--pi-bashMode, #EA9152); white-space: nowrap; }
 .session-footer { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 6px 15px; margin-top: 9px; color: var(--pi-muted, #A08979); font-size: 9px; }
+.preview-edit-status { margin: -6px 0 12px; min-height: 20px; color: var(--ui-accent); font-size: 12px; }
+/* A native picker anchor, not display:none, so showPicker also works locally. */
+input.preview-picker { position: fixed; z-index: 10; width: 1px; height: 1px; padding: 0; border: 0; opacity: 0; pointer-events: none; }
 .preview-caption { margin-top: 11px; color: var(--ui-muted); font-size: 11px; line-height: 1.7; }
 
 .palette-section { margin-top: 32px; padding-top: 25px; border-top: 1px solid var(--ui-border); }

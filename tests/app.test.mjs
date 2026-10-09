@@ -6,6 +6,7 @@ import { createContext, runInContext } from 'node:vm';
 
 const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
 const paletteSource = readFileSync(new URL('../src/palette.js', import.meta.url), 'utf8');
+const previewSource = readFileSync(new URL('../src/preview.js', import.meta.url), 'utf8');
 const appSource = readFileSync(new URL('../app.js', import.meta.url), 'utf8');
 const storageKey = 'a-theme-studio-v1';
 const defaults = {
@@ -52,12 +53,20 @@ class Element {
     if (!this.listeners.has(type)) this.listeners.set(type, []);
     this.listeners.get(type).push(callback);
   }
-  dispatch(type) {
+  dispatch(type, init = {}) {
     const event = {
       type, target: this, currentTarget: this, defaultPrevented: false,
+      button: 0, clientX: 0, clientY: 0,
+      ctrlKey: false, metaKey: false, altKey: false, shiftKey: false,
       preventDefault() { this.defaultPrevented = true; },
+      ...init,
     };
-    for (const callback of this.listeners.get(type) ?? []) callback(event);
+    this.ownerDocument.dispatchStack.push(event);
+    try {
+      for (const callback of this.listeners.get(type) ?? []) callback(event);
+    } finally {
+      this.ownerDocument.dispatchStack.pop();
+    }
     return event;
   }
   append(...children) {
@@ -117,7 +126,7 @@ function boot({ saved, blockedStorage = false, throwRead = false, throwWrite = f
     return null;
   };
   const document = {
-    body, activeElement: body,
+    body, activeElement: body, dispatchStack: [],
     getElementById(id) {
       if (elements.has(id)) return elements.get(id);
       for (const root of elements.values()) {
@@ -170,6 +179,21 @@ function boot({ saved, blockedStorage = false, throwRead = false, throwWrite = f
     },
   });
   runInContext(paletteSource, context, { filename: 'src/palette.js', timeout: 1000 });
+  runInContext(previewSource, context, { filename: 'src/preview.js', timeout: 1000 });
+  assert.equal(typeof context.PiPreview.hitTest, 'function');
+  // App tests isolate event routing from geometry, covered in preview.test.mjs.
+  const previewHit = { result: null, calls: [] };
+  context.PiPreview = {
+    hitTest(...args) { previewHit.calls.push(args); return previewHit.result; },
+  };
+  const pickerOpens = [];
+  const previewPicker = elements.get('preview-color-picker');
+  const recordOpen = method => pickerOpens.push({
+    method, value: previewPicker.value,
+    event: document.dispatchStack.at(-1),
+  });
+  previewPicker.showPicker = () => recordOpen('showPicker');
+  previewPicker.addEventListener('click', () => recordOpen('click'));
   runInContext(appSource, context, { filename: 'app.js', timeout: 1000 });
   const $ = id => {
     const element = document.getElementById(id);
@@ -178,6 +202,13 @@ function boot({ saved, blockedStorage = false, throwRead = false, throwWrite = f
   };
   return {
     $, context, body, blobs, downloads, revoked, timers, stored, storageCalls,
+    previewHit, pickerOpens,
+    previewClick(hit, init = {}, start = { clientX: 80, clientY: 60 }) {
+      previewHit.result = hit;
+      const preview = $('session-preview');
+      if (start) preview.dispatch('pointerdown', start);
+      return preview.dispatch('click', { clientX: 80, clientY: 60, ...init });
+    },
     palette: context.PiPalette,
     input(id, value) { $(id).value = value; $(id).dispatch('input'); },
     auto(checked) { $('auto-accent').checked = checked; $('auto-accent').dispatch('change'); },
@@ -235,7 +266,7 @@ async function download(app) {
 
 test('classic scripts initialize the actual page with defaults, preview roles, and swatches', () => {
   const scripts = [...html.matchAll(/<script\b([^>]*)\bsrc="([^"]+)"([^>]*)>/g)];
-  assert.deepEqual(scripts.map(match => match[2]), ['src/palette.js', 'app.js']);
+  assert.deepEqual(scripts.map(match => match[2]), ['src/palette.js', 'src/preview.js', 'app.js']);
   for (const match of scripts) {
     assert.match(match[1] + match[3], /\bdefer\b/);
     assert.doesNotMatch(match[1] + match[3], /type="module"/);
@@ -776,6 +807,275 @@ test('low-contrast manual body text warns without blocking export and reset clea
   assert.match(app.$('contrast-note').textContent, /Meets the 4\.5:1 body-text guideline/);
   assert.doesNotMatch(app.$('contrast-note').textContent, /Below/);
   assertPreview(app, { ...defaults, background: '#FFFFFF' });
+});
+
+test('page annotations use known roles, explicit bullet spans and distinct input border sides', () => {
+  const app = boot();
+  const roles = new Set(Object.keys(app.previewColors()));
+  const annotations = [...html.matchAll(/data-theme-(fg|bg|border(?:-(?:top|right|bottom|left))?)="([^"]+)"/g)];
+  assert.ok(annotations.length > 60);
+  for (const [, attribute, role] of annotations) {
+    assert.ok(roles.has(role) || (attribute === 'bg' && role === 'terminal'), `${attribute}: ${role}`);
+  }
+  assert.equal(annotations.filter(([, , role]) => role === 'terminal').length, 1);
+  assert.equal(app.$('session-preview').getAttribute('data-theme-bg'), 'terminal');
+  assert.equal(app.$('session-preview').getAttribute('data-theme-fg'), 'text');
+  assert.match(html, /<span class="list-bullet" data-theme-fg="mdListBullet" aria-hidden="true">•<\/span>/);
+  assert.match(html, /class="session-input" data-theme-border-top="borderAccent" data-theme-border-bottom="border"/);
+  assert.equal(app.$('preview-color-picker').type, 'color');
+  assert.equal(app.$('preview-color-picker').getAttribute('tabindex'), '-1');
+  assert.equal(app.$('preview-edit-status').getAttribute('role'), 'status');
+});
+
+test('preview click calls hitTest and opens showPicker synchronously with the selected value', () => {
+  const app = boot();
+  const picker = app.$('preview-color-picker');
+  assert.equal(app.pickerOpens.length, 0, 'Initialization must not open a picker');
+  const event = app.previewClick({ role: 'syntaxKeyword', kind: 'text' }, { clientX: 123, clientY: 234 },
+    { clientX: 123, clientY: 234 });
+  assert.deepEqual(app.previewHit.calls, [[app.$('session-preview'), 123, 234]]);
+  assert.equal(event.defaultPrevented, true);
+  assert.equal(app.pickerOpens.length, 1);
+  assert.equal(app.pickerOpens[0].method, 'showPicker');
+  assert.equal(app.pickerOpens[0].event, event, 'Open inside this click, not a timer or later render');
+  assert.equal(app.pickerOpens[0].value, app.previewColors().syntaxKeyword.toLowerCase());
+  assert.equal(picker.style.left, '123px');
+  assert.equal(picker.style.top, '234px');
+  assert.equal(picker.getAttribute('aria-label'), 'Edit syntaxKeyword text color');
+  assert.equal(app.$('preview-edit-status').textContent, 'Editing syntaxKeyword (text).');
+  assert.equal(app.timers.length, 0);
+  assert.equal(app.$('override-count').textContent, '0 custom colors', 'Selecting is not an override');
+  assert.deepEqual(JSON.parse(app.stored.get(storageKey)), defaults);
+});
+
+test('every preview role edit synchronizes CSS, swatches, export and persisted overrides', async () => {
+  const app = boot();
+  const generated = app.previewColors();
+  const picker = app.$('preview-color-picker');
+  const overrides = {};
+  for (const [index, role] of Object.keys(generated).entries()) {
+    const kind = /Bg$/.test(role) ? 'background' : /border/i.test(role) ? 'border' : 'text';
+    app.previewClick({ role, kind });
+    assert.equal(picker.value, generated[role].toLowerCase());
+    const controls = roleControl(app, role);
+    const color = `#${(0x214365 + index * 0x010203).toString(16).padStart(6, '0')}`;
+    picker.value = color;
+    const writes = picker.valueWrites;
+    picker.dispatch('input');
+    overrides[role] = color.toUpperCase();
+    assert.equal(picker.valueWrites, writes, 'Render must not reassign the active native picker');
+    assert.equal(app.$('preview-color-picker'), picker);
+    assert.equal(app.$(`override-${role}`), controls.chip);
+    assert.equal(controls.chip.value, color.toLowerCase());
+    assert.equal(controls.value.textContent, color.toUpperCase());
+    assert.equal(controls.origin.textContent, 'Custom');
+    assert.equal(controls.swatch.className, 'swatch is-overridden');
+    assert.equal(controls.reset.disabled, false);
+    assert.equal(app.$('preview-edit-status').textContent, `Editing ${role} (${kind}): ${color.toUpperCase()}`);
+    assert.deepEqual(app.previewColors(), { ...generated, ...overrides });
+    assert.deepEqual(JSON.parse(app.stored.get(storageKey)), { ...defaults, overrides });
+    assert.deepEqual((await download(app)).json, assertPreview(app, { ...defaults, overrides }));
+  }
+  assert.equal(app.pickerOpens.length, Object.keys(generated).length);
+  assert.equal(picker.listeners.get('input').length, 1);
+  const reloaded = boot({ saved: app.stored.get(storageKey) });
+  assertPreview(reloaded, { ...defaults, overrides });
+  assertNoBackgroundExport((await download(reloaded)).json);
+});
+
+test('terminal preview edits route through background controls and light generation, never a terminal override', async () => {
+  const app = boot();
+  app.input('override-syntaxKeyword', '#123456');
+  const dark = app.previewColors();
+  app.previewClick({ role: 'terminal', kind: 'background' });
+  const picker = app.$('preview-color-picker');
+  assert.equal(picker.value, defaults.background.toLowerCase());
+  assert.equal(picker.getAttribute('aria-label'), 'Edit terminal background color');
+  app.input('preview-color-picker', '#ffffff');
+  assert.equal(app.$('background-hex').value, '#FFFFFF');
+  assert.equal(app.$('background-picker').value, '#ffffff');
+  const choices = { ...defaults, background: '#FFFFFF', overrides: { syntaxKeyword: '#123456' } };
+  const expected = assertPreview(app, choices);
+  assert.equal(expected.appearance, 'light');
+  assert.notEqual(expected.colors.text, dark.text);
+  assert.equal(expected.colors.syntaxKeyword, '#123456');
+  assert.equal(app.$('override-count').textContent, '1 custom color');
+  assert.deepEqual(JSON.parse(app.stored.get(storageKey)), choices);
+  const exported = (await download(app)).json;
+  assert.deepEqual(exported, expected);
+  assertNoBackgroundExport(exported);
+  assert.equal(Object.hasOwn(exported.colors, 'terminal'), false);
+  assert.equal(Object.hasOwn(JSON.parse(app.stored.get(storageKey)).overrides, 'terminal'), false);
+  assert.equal(app.context.document.getElementById('override-terminal'), null);
+  assert.equal(app.$('preview-edit-status').textContent, 'Editing terminal background (background): #FFFFFF');
+  assertPreview(boot({ saved: app.stored.get(storageKey) }), choices);
+  app.input('preview-color-picker', defaults.background);
+  assertPreview(app, { ...choices, background: defaults.background });
+  assert.deepEqual(app.previewColors(), dark);
+});
+
+test('preview picker falls back to click when showPicker is unavailable', () => {
+  const app = boot();
+  const picker = app.$('preview-color-picker');
+  delete picker.showPicker;
+  app.previewClick({ role: 'toolPendingBg', kind: 'background' });
+  assert.equal(app.pickerOpens.length, 1);
+  assert.equal(app.pickerOpens[0].method, 'click');
+  assert.equal(app.pickerOpens[0].event.currentTarget, picker);
+  assert.equal(app.pickerOpens[0].value, app.previewColors().toolPendingBg.toLowerCase());
+  app.input('preview-color-picker', '#abcdef');
+  assert.equal(app.previewColors().toolPendingBg, '#ABCDEF');
+});
+
+for (const [role, kind, controlId] of [
+  ['mdLink', 'text', 'override-mdLink'], ['terminal', 'background', 'background-picker'],
+]) {
+  test(`showPicker exceptions focus the visible ${role} control rather than the hidden picker`, () => {
+    const app = boot();
+    const picker = app.$('preview-color-picker');
+    let attempts = 0;
+    picker.showPicker = () => { attempts++; throw new Error('NotAllowedError'); };
+    assert.doesNotThrow(() => app.previewClick({ role, kind }));
+    assert.equal(attempts, 1);
+    assert.equal(app.pickerOpens.length, 0, 'Do not retry click after showPicker throws');
+    const control = app.$(controlId);
+    assert.equal(app.context.document.activeElement, control);
+    assert.notEqual(control, picker);
+    assert.equal(control.disabled, false);
+    assert.equal(control.type, 'color');
+    assert.equal(control.getAttribute('hidden'), null);
+    assert.notEqual(control.getAttribute('tabindex'), '-1');
+    assert.notEqual(control.className, 'preview-picker');
+    assert.equal(app.$('preview-edit-status').textContent, `Use the focused ${role} color swatch to open its picker.`);
+    app.input(controlId, '#abcdef');
+    assert.equal(picker.value, '#abcdef', 'Visible control edits sync back to the selected preview picker');
+  });
+}
+
+test('fallback click exceptions also focus a visible swatch', () => {
+  const app = boot();
+  const picker = app.$('preview-color-picker');
+  picker.showPicker = undefined;
+  picker.click = () => { throw new Error('Picker blocked'); };
+  app.previewClick({ role: 'border', kind: 'border' });
+  assert.equal(app.context.document.activeElement, app.$('override-border'));
+  assert.match(app.$('preview-edit-status').textContent, /focused border color swatch/);
+});
+
+test('invalid fields block hit testing, opening and stale preview picker inputs until recovery', () => {
+  const app = boot();
+  app.previewClick({ role: 'text', kind: 'text' });
+  app.input('preview-color-picker', '#123456');
+  const before = app.previewColors();
+  for (const [id, invalid, valid] of [
+    ['theme-name', '../bad', defaults.name],
+    ...fields.map(field => [`${field}-hex`, '#bad', defaults[field]]),
+  ]) {
+    const saved = app.stored.get(storageKey);
+    const callCount = app.previewHit.calls.length;
+    const openCount = app.pickerOpens.length;
+    app.input(id, invalid);
+    assert.equal(app.$('preview-color-picker').disabled, true);
+    app.previewClick({ role: 'terminal', kind: 'background' });
+    assert.equal(app.previewHit.calls.length, callCount);
+    assert.equal(app.pickerOpens.length, openCount);
+    assert.match(app.$('preview-edit-status').textContent, /Fix the invalid fields/);
+    // Bypass the disabled native control to test the listener's own guard.
+    app.input('preview-color-picker', '#abcdef');
+    assert.deepEqual(app.previewColors(), before);
+    assert.equal(app.stored.get(storageKey), saved);
+    app.input(id, valid);
+    assert.equal(app.$('preview-color-picker').disabled, false);
+    assert.equal(app.$('preview-color-picker').value, '#123456');
+    assertPreview(app, { ...defaults, overrides: { text: '#123456' } });
+  }
+});
+
+test('unselected picker input, missing hit and unknown role do not mutate choices or open', () => {
+  const app = boot();
+  const saved = app.stored.get(storageKey);
+  const before = app.previewColors();
+  app.input('preview-color-picker', '#abcdef');
+  for (const role of [null, 'unsupported', 'background', '__proto__', 'constructor']) {
+    app.previewClick(role === null ? null : { role, kind: 'background' });
+  }
+  assert.equal(app.pickerOpens.length, 0);
+  assert.equal(app.previewHit.calls.length, 5);
+  assert.deepEqual(app.previewColors(), before);
+  assert.equal(app.stored.get(storageKey), saved);
+  assert.equal(app.$('override-count').textContent, '0 custom colors');
+});
+
+test('modifier and non-primary clicks retain default behavior and do not hit test or open', () => {
+  for (const init of [{ ctrlKey: true }, { metaKey: true }, { altKey: true }, { shiftKey: true },
+    { button: 1 }, { button: 2 }]) {
+    const app = boot();
+    const event = app.previewClick({ role: 'mdLink', kind: 'text' }, init);
+    assert.equal(event.defaultPrevented, false, JSON.stringify(init));
+    assert.equal(app.previewHit.calls.length, 0);
+    assert.equal(app.pickerOpens.length, 0);
+  }
+});
+
+test('drag clicks over five pixels do not open, while five-pixel and pointerless clicks do', () => {
+  const app = boot();
+  const hit = { role: 'text', kind: 'text' };
+  app.previewClick(hit, { clientX: 86, clientY: 60 });
+  app.previewClick(hit, { clientX: 84, clientY: 64 });
+  assert.equal(app.previewHit.calls.length, 0);
+  assert.equal(app.pickerOpens.length, 0);
+  app.previewClick(hit, { clientX: 83, clientY: 64 });
+  assert.equal(app.pickerOpens.length, 1, 'Euclidean distance of exactly five is still a click');
+  app.previewClick(hit, {}, null);
+  assert.equal(app.pickerOpens.length, 2, 'Consumed drag state must not affect a later click');
+});
+
+test('ordinary sample-link clicks prevent navigation and edit the link color', () => {
+  const app = boot();
+  const link = app.context.document.createElement('a');
+  link.href = 'https://example.test/';
+  const child = app.context.document.createElement('span');
+  link.append(child);
+  const event = app.previewClick({ role: 'mdLink', kind: 'text' }, { target: child });
+  assert.equal(event.defaultPrevented, true);
+  assert.equal(app.pickerOpens.length, 1);
+  assert.equal(app.$('preview-color-picker').value, app.previewColors().mdLink.toLowerCase());
+  assert.equal(app.downloads.length, 0);
+});
+
+test('selected preview picker node and value stay stable across inputs and follow other edits and resets', async () => {
+  const app = boot();
+  const picker = app.$('preview-color-picker');
+  const rows = [...app.$('palette-swatches').children];
+  app.previewClick({ role: 'syntaxKeyword', kind: 'text' });
+  picker.focus();
+  for (const color of ['#123456', '#789abc', '#fedcba']) {
+    picker.value = color;
+    const writes = picker.valueWrites;
+    picker.dispatch('input');
+    assert.equal(picker.valueWrites, writes);
+    assert.equal(app.$('preview-color-picker'), picker);
+    assert.equal(app.context.document.activeElement, picker);
+  }
+  const writes = picker.valueWrites;
+  app.input('theme-name', 'stable-picker');
+  app.input('base-hex', '#397bcc');
+  app.input('background-hex', '#ffffff');
+  app.auto(true);
+  await download(app);
+  assert.equal(picker.valueWrites, writes, 'Unchanged selected override must not be reassigned');
+  assert.equal(picker.value, '#fedcba');
+  app.input('override-syntaxKeyword', '#010203');
+  assert.equal(picker.value, '#010203');
+  roleControl(app, 'syntaxKeyword').reset.click();
+  assert.equal(picker.value, app.previewColors().syntaxKeyword.toLowerCase());
+  app.$('reset-button').click();
+  assert.equal(picker.value, app.previewColors().syntaxKeyword.toLowerCase());
+  assert.equal(app.$('preview-color-picker'), picker);
+  assert.equal(picker.listeners.get('input').length, 1);
+  assert.equal(app.$('session-preview').listeners.get('click').length, 1);
+  assert.equal(app.$('session-preview').listeners.get('pointerdown').length, 1);
+  for (const [index, row] of rows.entries()) assert.equal(app.$('palette-swatches').children[index], row);
 });
 
 test('normalizeName permits safe names and rejects traversal, reserved names, and invalid types', () => {

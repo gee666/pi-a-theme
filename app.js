@@ -11,6 +11,9 @@
   let currentTheme;
   let currentChoices;
   let overrides = {};
+  let previewEdit = null;
+  let pointerStart = null;
+  const previewPicker = $('preview-color-picker');
   const roleControls = new Map();
   let remembered = defaults;
   try {
@@ -114,6 +117,7 @@
       controls.chip.disabled = errors.length > 0;
       controls.reset.disabled = errors.length > 0 || !Object.hasOwn(overrides, role);
     }
+    previewPicker.disabled = errors.length > 0;
     currentTheme = undefined;
     if (errors.length) {
       $('status').textContent = 'Fix the fields above to download. Preview keeps the last valid palette.';
@@ -137,11 +141,61 @@
       controls.origin.textContent = custom ? 'Custom' : 'Generated';
       controls.swatch.className = custom ? 'swatch is-overridden' : 'swatch';
     }
+    if (previewEdit) {
+      const color = previewEdit.role === 'terminal' ? choices.background : currentTheme.colors[previewEdit.role];
+      if (previewPicker.value.toUpperCase() !== color.toUpperCase()) previewPicker.value = color;
+      $('preview-edit-status').textContent = `Editing ${previewEdit.role === 'terminal' ? 'terminal background' : previewEdit.role} (${previewEdit.kind}): ${color}`;
+    }
     const ratio = contrastRatio(currentTheme.colors.text, choices.background);
     $('contrast-note').textContent = `Body text / terminal contrast: ${ratio.toFixed(2)}:1. ${ratio < 4.5 ? 'Below the 4.5:1 guideline. Adjust text or terminal background.' : 'Meets the 4.5:1 body-text guideline.'} Other roles and panel backgrounds may have lower contrast, especially after custom edits.`;
     $('status').textContent = `Ready to download ${choices.name}.json`;
     try { localStorage.setItem(storageKey, JSON.stringify(choices)); } catch { /* Export does not depend on storage. */ }
   }
+
+  preview.addEventListener('pointerdown', event => {
+    pointerStart = { x: event.clientX, y: event.clientY };
+  });
+  preview.addEventListener('click', event => {
+    // Let modified clicks and drag selections keep their normal browser behavior.
+    if (event.button !== 0 || event.ctrlKey || event.metaKey || event.altKey || event.shiftKey) return;
+    event.preventDefault(); // Sample links are color targets, not navigation.
+    const start = pointerStart;
+    pointerStart = null;
+    if (start && Math.hypot(event.clientX - start.x, event.clientY - start.y) > 5) return;
+    if (!currentTheme) {
+      $('preview-edit-status').textContent = 'Fix the invalid fields before editing preview colors.';
+      return;
+    }
+    const hit = PiPreview.hitTest(preview, event.clientX, event.clientY);
+    if (!hit || (hit.role !== 'terminal' && !roleControls.has(hit.role))) return;
+    previewEdit = hit;
+    previewPicker.value = hit.role === 'terminal' ? currentChoices.background : currentTheme.colors[hit.role];
+    previewPicker.style.left = `${event.clientX}px`;
+    previewPicker.style.top = `${event.clientY}px`;
+    previewPicker.setAttribute('aria-label', `Edit ${hit.role} ${hit.kind} color`);
+    $('preview-edit-status').textContent = `Editing ${hit.role === 'terminal' ? 'terminal background' : hit.role} (${hit.kind}).`;
+    // Keep the picker mounted and next to the click, even when the swatches are
+    // off screen. showPicker must run synchronously within this user gesture.
+    try {
+      if (typeof previewPicker.showPicker === 'function') previewPicker.showPicker();
+      else previewPicker.click();
+    } catch {
+      const control = hit.role === 'terminal' ? $('background-picker') : roleControls.get(hit.role).chip;
+      control.focus();
+      $('preview-edit-status').textContent = `Use the focused ${hit.role} color swatch to open its picker.`;
+    }
+  });
+  previewPicker.addEventListener('input', () => {
+    if (!previewEdit || !currentTheme) return;
+    const color = normalizeColor(previewPicker.value);
+    if (previewEdit.role === 'terminal') {
+      $('background-hex').value = color;
+      $('background-picker').value = color;
+    } else {
+      overrides[previewEdit.role] = color;
+    }
+    render();
+  });
 
   for (const field of fields) {
     $(`${field}-picker`).addEventListener('input', event => {
