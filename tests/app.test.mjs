@@ -7,6 +7,7 @@ import { createContext, runInContext } from 'node:vm';
 const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
 const paletteSource = readFileSync(new URL('../src/palette.js', import.meta.url), 'utf8');
 const previewSource = readFileSync(new URL('../src/preview.js', import.meta.url), 'utf8');
+const pickerSource = readFileSync(new URL('../src/color-picker.js', import.meta.url), 'utf8');
 const appSource = readFileSync(new URL('../app.js', import.meta.url), 'utf8');
 const storageKey = 'a-theme-studio-v1';
 const defaults = {
@@ -87,6 +88,9 @@ class Element {
       this.parentNode = null;
     }
   }
+  select() { this.selectionStart = 0; this.selectionEnd = this.value.length; }
+  dispatchEvent(event) { return this.dispatch(event.type); }
+  close() { this.open = false; this.dispatch('close'); }
   focus() {
     if (this.disabled) return;
     this.ownerDocument.activeElement = this;
@@ -160,7 +164,8 @@ function boot({ saved, blockedStorage = false, throwRead = false, throwWrite = f
   const revoked = [];
   const timers = [];
   const context = createContext({
-    document, Blob,
+    document, Blob, Event: class { constructor(type) { this.type = type; } },
+    navigator: { clipboard: { async writeText(value) { context.copied = value; } } },
     URL: {
       createObjectURL(blob) {
         assert.ok(blob instanceof Blob);
@@ -192,8 +197,11 @@ function boot({ saved, blockedStorage = false, throwRead = false, throwWrite = f
     method, value: previewPicker.value,
     event: document.dispatchStack.at(-1),
   });
-  previewPicker.showPicker = () => recordOpen('showPicker');
-  previewPicker.addEventListener('click', () => recordOpen('click'));
+  elements.get('color-editor').showModal = () => {
+    elements.get('color-editor').open = true;
+    recordOpen('hex');
+  };
+  runInContext(pickerSource, context, { filename: 'src/color-picker.js', timeout: 1000 });
   runInContext(appSource, context, { filename: 'app.js', timeout: 1000 });
   const $ = id => {
     const element = document.getElementById(id);
@@ -266,7 +274,7 @@ async function download(app) {
 
 test('classic scripts initialize the actual page with defaults, preview roles, and swatches', () => {
   const scripts = [...html.matchAll(/<script\b([^>]*)\bsrc="([^"]+)"([^>]*)>/g)];
-  assert.deepEqual(scripts.map(match => match[2]), ['src/palette.js', 'src/preview.js', 'app.js']);
+  assert.deepEqual(scripts.map(match => match[2]), ['src/palette.js', 'src/preview.js', 'src/color-picker.js', 'app.js']);
   for (const match of scripts) {
     assert.match(match[1] + match[3], /\bdefer\b/);
     assert.doesNotMatch(match[1] + match[3], /type="module"/);
@@ -827,7 +835,7 @@ test('page annotations use known roles, explicit bullet spans and distinct input
   assert.equal(app.$('preview-edit-status').getAttribute('role'), 'status');
 });
 
-test('preview click calls hitTest and opens showPicker synchronously with the selected value', () => {
+test('preview click calls hitTest and opens the HEX editor with the selected value', () => {
   const app = boot();
   const picker = app.$('preview-color-picker');
   assert.equal(app.pickerOpens.length, 0, 'Initialization must not open a picker');
@@ -836,7 +844,9 @@ test('preview click calls hitTest and opens showPicker synchronously with the se
   assert.deepEqual(app.previewHit.calls, [[app.$('session-preview'), 123, 234]]);
   assert.equal(event.defaultPrevented, true);
   assert.equal(app.pickerOpens.length, 1);
-  assert.equal(app.pickerOpens[0].method, 'showPicker');
+  assert.equal(app.pickerOpens[0].method, 'hex');
+  assert.equal(app.context.document.activeElement, app.$('color-editor-hex'));
+  assert.equal(app.$('color-editor-hex').value, app.previewColors().syntaxKeyword);
   assert.equal(app.pickerOpens[0].event, event, 'Open inside this click, not a timer or later render');
   assert.equal(app.pickerOpens[0].value, app.previewColors().syntaxKeyword.toLowerCase());
   assert.equal(picker.style.left, '123px');
@@ -912,54 +922,6 @@ test('terminal preview edits route through background controls and light generat
   app.input('preview-color-picker', defaults.background);
   assertPreview(app, { ...choices, background: defaults.background });
   assert.deepEqual(app.previewColors(), dark);
-});
-
-test('preview picker falls back to click when showPicker is unavailable', () => {
-  const app = boot();
-  const picker = app.$('preview-color-picker');
-  delete picker.showPicker;
-  app.previewClick({ role: 'toolPendingBg', kind: 'background' });
-  assert.equal(app.pickerOpens.length, 1);
-  assert.equal(app.pickerOpens[0].method, 'click');
-  assert.equal(app.pickerOpens[0].event.currentTarget, picker);
-  assert.equal(app.pickerOpens[0].value, app.previewColors().toolPendingBg.toLowerCase());
-  app.input('preview-color-picker', '#abcdef');
-  assert.equal(app.previewColors().toolPendingBg, '#ABCDEF');
-});
-
-for (const [role, kind, controlId] of [
-  ['mdLink', 'text', 'override-mdLink'], ['terminal', 'background', 'background-picker'],
-]) {
-  test(`showPicker exceptions focus the visible ${role} control rather than the hidden picker`, () => {
-    const app = boot();
-    const picker = app.$('preview-color-picker');
-    let attempts = 0;
-    picker.showPicker = () => { attempts++; throw new Error('NotAllowedError'); };
-    assert.doesNotThrow(() => app.previewClick({ role, kind }));
-    assert.equal(attempts, 1);
-    assert.equal(app.pickerOpens.length, 0, 'Do not retry click after showPicker throws');
-    const control = app.$(controlId);
-    assert.equal(app.context.document.activeElement, control);
-    assert.notEqual(control, picker);
-    assert.equal(control.disabled, false);
-    assert.equal(control.type, 'color');
-    assert.equal(control.getAttribute('hidden'), null);
-    assert.notEqual(control.getAttribute('tabindex'), '-1');
-    assert.notEqual(control.className, 'preview-picker');
-    assert.equal(app.$('preview-edit-status').textContent, `Use the focused ${role} color swatch to open its picker.`);
-    app.input(controlId, '#abcdef');
-    assert.equal(picker.value, '#abcdef', 'Visible control edits sync back to the selected preview picker');
-  });
-}
-
-test('fallback click exceptions also focus a visible swatch', () => {
-  const app = boot();
-  const picker = app.$('preview-color-picker');
-  picker.showPicker = undefined;
-  picker.click = () => { throw new Error('Picker blocked'); };
-  app.previewClick({ role: 'border', kind: 'border' });
-  assert.equal(app.context.document.activeElement, app.$('override-border'));
-  assert.match(app.$('preview-edit-status').textContent, /focused border color swatch/);
 });
 
 test('invalid fields block hit testing, opening and stale preview picker inputs until recovery', () => {
@@ -1076,6 +1038,66 @@ test('selected preview picker node and value stay stable across inputs and follo
   assert.equal(app.$('session-preview').listeners.get('click').length, 1);
   assert.equal(app.$('session-preview').listeners.get('pointerdown').length, 1);
   for (const [index, row] of rows.entries()) assert.equal(app.$('palette-swatches').children[index], row);
+});
+
+test('all swatches open the HEX-first editor and preserve normal draft editing', () => {
+  const app = boot();
+  for (const id of ['base-picker', 'background-picker', 'accent-picker', 'override-text']) {
+    const chip = app.$(id);
+    const event = chip.dispatch('click');
+    const hex = app.$('color-editor-hex');
+    assert.equal(event.defaultPrevented, true);
+    assert.equal(app.$('color-editor').open, true);
+    assert.equal(app.context.document.activeElement, hex);
+    assert.equal(hex.value, chip.value.toUpperCase());
+    assert.equal(hex.selectionEnd, 7);
+    const before = chip.value;
+    for (const draft of ['', '#', '#12', 'not a color']) {
+      app.input('color-editor-hex', draft);
+      assert.equal(hex.value, draft);
+      assert.equal(chip.value, before);
+      assert.equal(hex.getAttribute('aria-invalid'), 'true');
+      assert.equal(app.$('color-editor-copy').disabled, true);
+    }
+    app.input('color-editor-hex', '#a1b2c3');
+    assert.equal(hex.value, '#a1b2c3', 'Do not rewrite text or move the caret during input');
+    assert.equal(chip.value, '#a1b2c3');
+    assert.equal(hex.getAttribute('aria-invalid'), null);
+    app.input('color-editor-visual', '#abcdef');
+    assert.equal(hex.value, '#ABCDEF');
+    assert.equal(chip.value, '#abcdef');
+    app.$('color-editor-close').click();
+    assert.equal(app.$('color-editor').open, false);
+    assert.equal(app.context.document.activeElement, chip);
+  }
+});
+
+test('HEX editor updates preview overrides and returns focus to the preview', () => {
+  const app = boot();
+  app.previewClick({ role: 'text', kind: 'text' });
+  app.input('color-editor-hex', '#123456');
+  assert.equal(app.previewColors().text, '#123456');
+  assert.equal(JSON.parse(app.stored.get(storageKey)).overrides.text, '#123456');
+  app.$('color-editor').close();
+  assert.equal(app.context.document.activeElement, app.$('session-preview'));
+  app.$('base-picker').disabled = true;
+  app.$('base-picker').dispatch('click');
+  assert.equal(app.$('color-editor').open, false);
+});
+
+test('copy icon writes HEX and handles unavailable clipboard without losing the value', async () => {
+  const app = boot();
+  app.$('base-picker').click();
+  app.$('color-editor-copy').click();
+  await new Promise(resolve => setImmediate(resolve));
+  assert.equal(app.context.copied, defaults.base);
+  assert.equal(app.$('color-editor-status').textContent, `Copied ${defaults.base}`);
+  app.context.navigator.clipboard.writeText = async () => { throw new Error('Denied'); };
+  app.$('color-editor-copy').click();
+  await new Promise(resolve => setImmediate(resolve));
+  assert.match(app.$('color-editor-status').textContent, /Clipboard unavailable/);
+  assert.equal(app.context.document.activeElement, app.$('color-editor-hex'));
+  assert.equal(app.$('color-editor-hex').selectionEnd, 7);
 });
 
 test('normalizeName permits safe names and rejects traversal, reserved names, and invalid types', () => {

@@ -8,9 +8,9 @@ Open [`index.html`](index.html) in a browser. No server, framework, installation
 
 1. Name your theme. Use 1–64 letters, numbers, hyphens or underscores, starting with a letter or number. Built-in theme names and Windows device names are reserved.
 2. Match the background to your terminal. Light backgrounds automatically generate a light palette; dark backgrounds keep the original derivation.
-3. Choose base and accent colors with the native color pickers or enter six-digit hex values. Enable **Derive accent from base** for an automatic accent.
+3. Choose base and accent colors with the HEX-first picker or enter six-digit hex values. Enable **Derive accent from base** for an automatic accent.
 4. Inspect the Pi-style lorem ipsum session, including markdown, syntax highlighting, tool states, diffs, and thinking levels. All 55 generated color roles appear below it.
-5. Click directly in the preview or use any swatch in **Color roles** to open its color picker. Changes update the preview and downloaded JSON.
+5. Click directly in the preview or use any swatch in **Color roles** to open its color picker. The picker opens with a normal HEX text input: select, copy, cut, delete, edit, or paste as usual. Use the copy icon to copy the HEX value, or choose a color visually. Valid changes update the preview and downloaded JSON immediately; incomplete input keeps the last valid color.
 6. Click **Download theme**.
 
 In the preview, click text or the spaces between its letters to edit the text color. Click panel padding or unused space beside a line to edit the background underneath. Borders, syntax tokens, and list bullets select their own roles. The status above the preview names the selected role.

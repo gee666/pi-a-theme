@@ -65,6 +65,7 @@
       reset.className = 'swatch-reset';
       reset.textContent = 'Reset';
       reset.setAttribute('aria-label', `Reset ${role} to generated color`);
+      PiColorPicker.bind(chip);
       chip.addEventListener('input', () => {
         overrides[role] = normalizeColor(chip.value);
         render();
@@ -174,16 +175,7 @@
     previewPicker.style.top = `${event.clientY}px`;
     previewPicker.setAttribute('aria-label', `Edit ${hit.role} ${hit.kind} color`);
     $('preview-edit-status').textContent = `Editing ${hit.role === 'terminal' ? 'terminal background' : hit.role} (${hit.kind}).`;
-    // Keep the picker mounted and next to the click, even when the swatches are
-    // off screen. showPicker must run synchronously within this user gesture.
-    try {
-      if (typeof previewPicker.showPicker === 'function') previewPicker.showPicker();
-      else previewPicker.click();
-    } catch {
-      const control = hit.role === 'terminal' ? $('background-picker') : roleControls.get(hit.role).chip;
-      control.focus();
-      $('preview-edit-status').textContent = `Use the focused ${hit.role} color swatch to open its picker.`;
-    }
+    PiColorPicker.open(previewPicker, preview);
   });
   previewPicker.addEventListener('input', () => {
     if (!previewEdit || !currentTheme) return;
@@ -198,6 +190,7 @@
   });
 
   for (const field of fields) {
+    PiColorPicker.bind($(`${field}-picker`));
     $(`${field}-picker`).addEventListener('input', event => {
       $(`${field}-hex`).value = event.target.value.toUpperCase();
       render();

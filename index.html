@@ -9,10 +9,30 @@
   <link rel="stylesheet" href="styles.css">
   <script defer src="src/palette.js"></script>
   <script defer src="src/preview.js"></script>
+  <script defer src="src/color-picker.js"></script>
   <script defer src="app.js"></script>
 </head>
 <body>
   <noscript><p class="background-note">Enable JavaScript to generate and download themes. All processing stays in your browser.</p></noscript>
+  <dialog id="color-editor" class="color-editor" aria-labelledby="color-editor-title" aria-describedby="color-editor-help">
+    <div class="color-editor-heading">
+      <h2 id="color-editor-title">Edit color</h2>
+      <button id="color-editor-close" class="button button-secondary" type="button" aria-label="Close color picker">Done</button>
+    </div>
+    <p id="color-editor-help" class="field-help">Edit or paste a HEX color. Valid changes apply immediately.</p>
+    <label for="color-editor-hex">HEX</label>
+    <div class="color-editor-inputs">
+      <input id="color-editor-hex" class="hex-input" type="text" autocomplete="off" spellcheck="false" aria-describedby="color-editor-status">
+      <button id="color-editor-copy" class="button button-secondary copy-color" type="button" aria-label="Copy HEX color" title="Copy HEX color">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M15 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h3"/></svg>
+      </button>
+    </div>
+    <div class="color-editor-visual-row">
+      <input id="color-editor-visual" type="color" value="#171717" aria-label="Choose color visually">
+      <label for="color-editor-visual">Choose visually</label>
+    </div>
+    <p id="color-editor-status" class="status" role="status" aria-atomic="true"></p>
+  </dialog>
   <header class="site-header">
     <a class="brand" href="index.html" aria-label="a-theme home"><span class="brand-mark" aria-hidden="true">a.</span><span>a-theme</span></a>
     <span class="studio-label">Pi theme studio</span>
