@@ -10,7 +10,9 @@
     "url": "https://github.com/gee666/pi-a-theme.git"
   },
   "scripts": {
-    "test": "node --test tests/*.test.mjs",
+    "pretest": "npm run test:pi",
+    "test": "npm run test:unit",
+    "test:unit": "node --test tests/*.test.mjs",
     "test:pi": "node scripts/validate-pi.mjs",
     "check": "node --check app.js && node --check src/palette.js && node --check src/preview.js && node --check src/color-picker.js && node --check scripts/validate-pi.mjs"
   },
