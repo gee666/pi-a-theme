@@ -74,6 +74,25 @@ npm test
 
 The color relationships originate in [Blooming Ilacs](https://github.com/gee666/pi-theme-blooming-ilacs).
 
+## Pi compatibility and validation
+
+Only the latest stable `@earendil-works/pi-coding-agent` release is a test target. Older Pi versions are not part of the test policy. Before every release, resolve `@latest` again, rerun the checks below, and update this record with the exact version actually checked and any validation limits.
+
+Tested against Pi 1.4.0 using `@earendil-works/pi-coding-agent` on Node.js 24.16.0.
+
+Automated checks cover the Node test suite, JavaScript syntax, and representative dark, light, and custom-override exports through Pi's actual theme schema validator and theme loader. These are format/loading checks, not an interactive Pi session. The DOM tests use a test double; no real-browser interaction or terminal appearance check was run for this record.
+
+The browser app and downloaded JSON still need no Pi dependency. The isolated validation install requires Node.js 22.19 or newer for Pi 1.4.0; the dependency-free app tests still need only Node.js 18 or newer.
+
+```sh
+npm install --prefix tmp/pi-validation --no-save --package-lock=false @earendil-works/pi-coding-agent@latest
+npm test
+npm run check
+npm run test:pi
+```
+
+The validator refuses a cached Pi install that no longer matches npm's latest release. It needs registry access and uses Pi's internal validation entry points, which may change in a later release. There is no configured linter or type checker for this plain JavaScript app.
+
 ## License
 
 [MIT](LICENSE).
